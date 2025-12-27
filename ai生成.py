@@ -1,0 +1,256 @@
+import streamlit as st
+import random
+from datetime import datetime
+
+# -------------------------- 页面基础配置 --------------------------
+st.set_page_config(
+    page_title="ScholarMind - 学术灵感引擎",
+    page_icon="📚",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# -------------------------- 自定义样式 --------------------------
+st.markdown("""
+<style>
+    .stTextInput, .stSelectbox, .stTextArea {
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+    }
+    .result-card {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 10px 0;
+        border-left: 4px solid #2196f3;
+    }
+    .citation {
+        font-family: monospace;
+        font-size: 0.9em;
+        color: #333;
+        background-color: #f0f0f0;
+        padding: 8px;
+        border-radius: 4px;
+    }
+    .highlight {
+        color: #2196f3;
+        font-weight: 600;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# -------------------------- 模拟学术数据 --------------------------
+# 核心文献库（模拟）
+CORE_LITERATURE = {
+    "计算机科学/机器学习/大模型幻觉抑制": [
+        ("Li et al., 2024", "《Hallucination Suppression in LLMs via Knowledge Grounding》",
+         "IEEE Transactions on Pattern Analysis and Machine Intelligence"),
+        ("Zhang et al., 2023", "《A Survey on Hallucination Detection in Large Language Models》",
+         "ACM Computing Surveys"),
+        ("Wang et al., 2022", "《Contrastive Learning for Reducing LLM Hallucinations》", "NeurIPS")
+    ],
+    "计算机科学/机器学习/小样本学习": [
+        ("Chen et al., 2024", "《Few-Shot Learning with Prompt Enhancement》", "ICML"),
+        ("Liu et al., 2023", "《Meta-Learning for Low-Resource Few-Shot Tasks》", "ICLR"),
+        ("Zhao et al., 2022", "《Few-Shot Classification via Feature Alignment》", "CVPR")
+    ],
+    "默认": [
+        ("Author et al., 2024", "《Research on Core Issues in This Field》", "Top Journal in the Field"),
+        ("Author et al., 2023", "《A Comprehensive Review of Recent Advances》", "Key Conference Proceedings"),
+        ("Author et al., 2022", "《Challenges and Future Directions》", "International Journal")
+    ]
+}
+
+# 选题建议模板（模拟）
+TOPIC_TEMPLATES = [
+    "基于{method}的{field}低资源场景{problem}问题研究",
+    "{field}中{problem}的可解释性增强方法：{innovation}视角",
+    "融合{cross_field}思想的{field} {problem}解决方案与实证分析"
+]
+
+# 引用格式模板
+CITATION_FORMATS = {
+    "APA 7th": "{authors} ({year}). {title}. {journal}.",
+    "GB/T 7714": "{authors}. {title}[J]. {journal}, {year}.",
+    "MLA 9th": "{authors}. \"{title}\". {journal}, vol. XX, no. XX, {year}, pp. XX-XX."
+}
+
+
+# -------------------------- 核心功能函数 --------------------------
+def get_literature(field_key):
+    """获取对应领域的核心文献"""
+    return CORE_LITERATURE.get(field_key, CORE_LITERATURE["默认"])
+
+
+def generate_topics(field, core_problem):
+    """生成创新选题建议"""
+    methods = ["知识锚定", "对比学习", "元学习", "提示增强", "特征对齐"]
+    innovations = ["因果推理", "多模态融合", "轻量化模型", "人机协同"]
+    cross_fields = ["认知心理学", "统计学", "博弈论"]
+
+    topics = []
+    for template in TOPIC_TEMPLATES:
+        topic = template.format(
+            method=random.choice(methods),
+            field=field,
+            problem=core_problem,
+            innovation=random.choice(innovations),
+            cross_field=random.choice(cross_fields)
+        )
+        topics.append(topic)
+    return topics
+
+
+def generate_literature_review(field, core_problem, literature_list):
+    """生成文献综述框架"""
+    review = f"""
+### 文献综述框架：{field} - {core_problem}
+#### 1. 研究背景与意义
+{field}作为人工智能领域的核心方向，近年来取得了快速发展，但{core_problem}问题仍制约着该领域的实际应用价值，亟待提出有效的解决方案。
+
+#### 2. 国内外研究现状
+##### 2.1 核心方法分类
+- 基于数据增强的方法：代表文献{literature_list[0][0]}提出了{literature_list[0][1].split("《")[1].split("》")[0]}，通过{random.choice(["知识 grounding", "对比学习"])}缓解{core_problem}；
+- 基于模型结构优化的方法：{literature_list[1][0]}的研究聚焦于{core_problem}的可解释性，提出了{random.choice(["元学习框架", "特征对齐策略"])}；
+- 基于提示工程的方法：{literature_list[2][0]}探索了低资源场景下的{core_problem}解决思路，为后续研究提供了参考。
+
+#### 3. 现有研究不足
+- 现有方法在{random.choice(["低资源场景", "复杂任务"])}下性能显著下降；
+- 缺乏对{core_problem}产生机制的深入分析与可解释性验证；
+- 跨领域融合的解决方案尚未形成体系化研究。
+
+#### 4. 本文研究切入点
+针对上述不足，本研究拟从{random.choice(["多模态融合", "轻量化模型"])}视角出发，提出适用于{field}的{core_problem}解决方法。
+    """
+    return review
+
+
+def generate_abstract(field, core_problem, topic):
+    """生成论文摘要初稿"""
+    abstract = f"""
+### 论文摘要
+**研究背景**：{field}是当前人工智能领域的研究热点，{core_problem}问题已成为制约该领域技术落地的关键瓶颈。现有方法在处理{random.choice(["低资源", "复杂场景"])}下的{core_problem}时，存在{random.choice(["性能不足", "可解释性差"])}等问题。
+**研究方法**：本文提出了{topic.split("：")[-1] if "：" in topic else "一种基于新型框架的"}方法，通过{random.choice(["知识锚定", "特征对齐", "元学习"])}策略优化模型输出，增强对{core_problem}的抑制/解决能力。
+**实验结果**：在{random.choice(["公开基准数据集", "自建数据集"])}上的实验表明，所提方法相较于{random.choice(["Li et al., 2024", "Zhang et al., 2023"])}的基线模型，{random.choice(["准确率提升12.5%", "幻觉率降低18.3%", "F1值提高9.7%"])}，验证了方法的有效性。
+**研究结论**：该方法为解决{field}中的{core_problem}问题提供了新的思路，可进一步拓展至{random.choice(["多模态任务", "工业级应用场景"])}。
+    """
+    return abstract
+
+
+def format_citation(literature, format_type):
+    """生成指定格式的引用"""
+    formatted_citations = []
+    year = literature[0].split(", ")[1] if ", " in literature[0] else "2024"
+    for auth, title, journal in literature:
+        citation = CITATION_FORMATS[format_type].format(
+            authors=auth,
+            year=year,
+            title=title,
+            journal=journal
+        )
+        formatted_citations.append(citation)
+    return formatted_citations
+
+
+# -------------------------- 页面布局 --------------------------
+# 侧边栏：输入参数
+st.sidebar.header("📋 研究参数配置")
+field = st.sidebar.text_input("学科领域", placeholder="如：计算机科学/机器学习/大模型幻觉抑制")
+research_basis = st.sidebar.selectbox(
+    "已有基础",
+    ["已完成文献调研", "正在进行实验", "需确定选题"]
+)
+core_problem = st.sidebar.text_input("核心研究问题", placeholder="如：现有方法在低资源场景下性能下降")
+citation_format = st.sidebar.selectbox(
+    "引用格式",
+    ["APA 7th", "GB/T 7714", "MLA 9th"]
+)
+output_choice = st.sidebar.multiselect(
+    "输出内容",
+    ["创新选题建议", "文献综述框架", "论文摘要初稿"],
+    default=["创新选题建议", "文献综述框架", "论文摘要初稿"]
+)
+
+# 生成按钮
+generate_btn = st.sidebar.button("🚀 生成学术灵感", type="primary")
+
+# 主页面标题
+st.title("📚 ScholarMind 学术灵感引擎")
+st.divider()
+
+# 生成结果展示
+if generate_btn:
+    # 校验输入
+    if not field or not core_problem:
+        st.error("⚠️ 请填写「学科领域」和「核心研究问题」后再生成！")
+    else:
+        # 加载状态
+        with st.spinner("正在生成学术内容，请稍候..."):
+            # 1. 获取核心文献
+            field_key = field.strip()
+            literature = get_literature(field_key)
+
+            # 2. 分栏展示结果
+            col1, col2 = st.columns([2, 1])
+
+            with col1:
+                st.subheader("🎯 创新选题建议")
+                topics = generate_topics(field, core_problem)
+                for i, topic in enumerate(topics, 1):
+                    st.markdown(f"""
+                    <div class="result-card">
+                        <strong>选题{i}：</strong> {topic}
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                if "文献综述框架" in output_choice:
+                    st.subheader("📖 文献综述框架")
+                    review = generate_literature_review(field, core_problem, literature)
+                    st.markdown(f"""
+                    <div class="result-card">
+                        {review}
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                if "论文摘要初稿" in output_choice:
+                    st.subheader("📝 论文摘要初稿")
+                    abstract = generate_abstract(field, core_problem, topics[0])
+                    st.markdown(f"""
+                    <div class="result-card">
+                        {abstract}
+                    </div>
+                    """, unsafe_allow_html=True)
+
+            with col2:
+                st.subheader("📜 核心文献引用")
+                formatted_cites = format_citation(literature, citation_format)
+                for i, cite in enumerate(formatted_cites, 1):
+                    st.markdown(f"""
+                    <div class="citation">
+                        {i}. {cite}
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                # 导出功能
+                st.subheader("💾 导出内容")
+                export_all = "\n\n".join([
+                    "=== 创新选题建议 ===",
+                    "\n".join(topics),
+                    "=== 文献综述框架 ===",
+                    review if "文献综述框架" in output_choice else "",
+                    "=== 论文摘要初稿 ===",
+                    abstract if "论文摘要初稿" in output_choice else "",
+                    "=== 核心文献引用 ===",
+                    "\n".join(formatted_cites)
+                ])
+
+                st.download_button(
+                    label="下载全部内容（TXT）",
+                    data=export_all,
+                    file_name=f"ScholarMind_成果_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                    mime="text/plain"
+                )
+
+# 底部说明
+st.divider()
+st.caption("💡 提示：本工具生成内容为学术灵感参考，需结合实际研究验证与优化；引用文献为模拟数据，实际使用请替换为真实文献。")
