@@ -1,7 +1,8 @@
 import streamlit as st
 import random
 from datetime import datetime
-from openai import OpenAI
+# 替换为月之暗面SDK
+from moonshot import Moonshot
 
 # -------------------------- 页面基础配置 --------------------------
 st.set_page_config(
@@ -46,15 +47,15 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# -------------------------- API 配置（仅网页输入） --------------------------
-def init_openai_client(api_key):
-    """初始化 OpenAI 客户端（仅基于网页输入的密钥）"""
+# -------------------------- API 配置（月之暗面） --------------------------
+def init_moonshot_client(api_key):
+    """初始化月之暗面客户端（仅基于网页输入的密钥）"""
     if not api_key:
         st.warning("⚠️ 未填写API密钥，将使用模拟数据生成内容（无真实LLM能力）")
         return None
     try:
-        client = OpenAI(api_key=api_key.strip())
-        # 简单校验密钥有效性（调用轻量接口）
+        client = Moonshot(api_key=api_key.strip())
+        # 验证密钥有效性（调用模型列表，月之暗面无limit参数）
         client.models.list()
         st.success("✅ API密钥验证通过！")
         return client
@@ -98,8 +99,7 @@ def get_literature(field_key):
 
 
 def generate_topics(client, field, core_problem):
-    """生成选题（API优先，无则兜底）"""
-    # 有API则调用真实LLM
+    """生成选题（月之暗面API优先，无则兜底）"""
     if client:
         prompt = f"""
         你是资深学术研究员，基于以下信息生成3个创新、可行的学术选题：
@@ -109,7 +109,7 @@ def generate_topics(client, field, core_problem):
         """
         try:
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="moonshot-v1-8k",  # 月之暗面模型名
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7,
                 max_tokens=500
@@ -119,7 +119,7 @@ def generate_topics(client, field, core_problem):
         except Exception as e:
             st.warning(f"选题生成失败，使用兜底数据：{str(e)}")
 
-    # 无API/调用失败则用模拟逻辑
+    # 兜底逻辑
     methods = ["知识锚定", "对比学习", "元学习", "提示增强", "特征对齐"]
     innovations = ["因果推理", "多模态融合", "轻量化模型", "人机协同"]
     cross_fields = ["认知心理学", "统计学", "博弈论"]
@@ -140,7 +140,7 @@ def generate_topics(client, field, core_problem):
 
 
 def generate_literature_review(client, field, core_problem, literature_list):
-    """生成文献综述（API优先，无则兜底）"""
+    """生成文献综述（月之暗面API优先，无则兜底）"""
     if client:
         literature_str = "\n".join([f"{auth}: {title} ({journal})" for auth, title, journal in literature_list])
         prompt = f"""
@@ -152,7 +152,7 @@ def generate_literature_review(client, field, core_problem, literature_list):
         """
         try:
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="moonshot-v1-8k",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.6,
                 max_tokens=1000
@@ -184,7 +184,7 @@ def generate_literature_review(client, field, core_problem, literature_list):
 
 
 def generate_abstract(client, field, core_problem, topic):
-    """生成摘要（API优先，无则兜底）"""
+    """生成摘要（月之暗面API优先，无则兜底）"""
     if client:
         prompt = f"""
         基于以下信息生成规范的学术论文摘要（约300字）：
@@ -195,7 +195,7 @@ def generate_abstract(client, field, core_problem, topic):
         """
         try:
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="moonshot-v1-8k",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.6,
                 max_tokens=600
@@ -229,7 +229,7 @@ def format_citation(literature, format_type):
     return formatted_citations
 
 
-# -------------------------- 页面布局（重点：网页输入API） --------------------------
+# -------------------------- 页面布局（月之暗面API输入） --------------------------
 # 侧边栏：研究参数 + API密钥输入
 st.sidebar.header("📋 研究参数配置")
 field = st.sidebar.text_input("学科领域", placeholder="如：计算机科学/机器学习/大模型幻觉抑制")
@@ -242,14 +242,14 @@ output_choice = st.sidebar.multiselect(
     default=["创新选题建议", "文献综述框架", "论文摘要初稿"]
 )
 
-# 核心：侧边栏手动输入API密钥（密码框隐藏）
+# 核心：侧边栏手动输入月之暗面API密钥
 st.sidebar.divider()
-st.sidebar.header("🔑 OpenAI API 配置")
+st.sidebar.header("🔑 月之暗面 API 配置")
 api_key = st.sidebar.text_input(
     "API Key",
-    type="password",  # 输入时隐藏，保护密钥
-    placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    help="获取地址：https://platform.openai.com/api-keys"
+    type="password",
+    placeholder="sk-sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",  # 月之暗面密钥格式
+    help="获取地址：https://platform.moonshot.cn"
 )
 st.sidebar.markdown('<div class="api-tip">✅ 填写有效密钥可生成高质量学术内容，不填则用模拟数据</div>',
                     unsafe_allow_html=True)
@@ -263,22 +263,15 @@ st.divider()
 
 # 生成结果展示
 if generate_btn:
-    # 基础校验
     if not field or not core_problem:
         st.error("⚠️ 请先填写「学科领域」和「核心研究问题」！")
     else:
-        # 初始化客户端（仅基于网页输入的API密钥）
-        client = init_openai_client(api_key)
+        client = init_moonshot_client(api_key)
 
-        # 加载状态
         with st.spinner("正在生成学术内容，请稍候..."):
-            # 获取文献
             literature = get_literature(field.strip())
-
-            # 分栏展示结果
             col1, col2 = st.columns([2, 1])
             with col1:
-                # 生成选题
                 st.subheader("🎯 创新选题建议")
                 topics = generate_topics(client, field, core_problem)
                 for i, topic in enumerate(topics, 1):
@@ -288,26 +281,22 @@ if generate_btn:
                     </div>
                     """, unsafe_allow_html=True)
 
-                # 生成综述
                 if "文献综述框架" in output_choice:
                     st.subheader("📖 文献综述框架")
                     review = generate_literature_review(client, field, core_problem, literature)
                     st.markdown(f'<div class="result-card">{review}</div>', unsafe_allow_html=True)
 
-                # 生成摘要
                 if "论文摘要初稿" in output_choice:
                     st.subheader("📝 论文摘要初稿")
                     abstract = generate_abstract(client, field, core_problem, topics[0])
                     st.markdown(f'<div class="result-card">{abstract}</div>', unsafe_allow_html=True)
 
             with col2:
-                # 文献引用
                 st.subheader("📜 核心文献引用")
                 formatted_cites = format_citation(literature, citation_format)
                 for i, cite in enumerate(formatted_cites, 1):
                     st.markdown(f'<div class="citation">{i}. {cite}</div>', unsafe_allow_html=True)
 
-                # 导出功能
                 st.subheader("💾 导出内容")
                 export_all = "\n\n".join([
                     "=== 创新选题建议 ===",
@@ -328,5 +317,4 @@ if generate_btn:
 
 # 底部提示
 st.divider()
-
 st.caption("💡 提示：生成内容仅为学术灵感参考，需结合实际研究验证；API密钥仅在本次会话有效，不会存储。")
