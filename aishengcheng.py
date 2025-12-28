@@ -55,7 +55,7 @@ def init_openai_client(api_key):
     try:
         client = OpenAI(api_key=api_key.strip())
         # 简单校验密钥有效性（调用轻量接口）
-        client.models.list(limit=1)
+        client.models.list()
         st.success("✅ API密钥验证通过！")
         return client
     except Exception as e:
@@ -328,4 +328,5 @@ if generate_btn:
 
 # 底部提示
 st.divider()
+
 st.caption("💡 提示：生成内容仅为学术灵感参考，需结合实际研究验证；API密钥仅在本次会话有效，不会存储。")
