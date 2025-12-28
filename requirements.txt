@@ -1,2 +1,2 @@
-streamlit>=1.30.0
-moonshot-api>=0.1.0
+streamlit==1.30.0
+moonshot-api==1.0.0
