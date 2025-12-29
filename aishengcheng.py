@@ -41,13 +41,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+
 # -------------------------- 月之暗面API配置（HTTP调用） --------------------------
 def call_moonshot_api(api_key, prompt, model="moonshot-v1-8k", temperature=0.7, max_tokens=500):
     """直接调用月之暗面API（兼容OpenAI接口格式）"""
     url = "https://api.moonshot.cn/v1/chat/completions"
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}"
+        "Authorization": f"Bearer {api_key}",
+        "User-Agent": "ScholarMind/1.0 (Streamlit)"  # 补充User-Agent
     }
     data = {
         "model": model,
@@ -63,6 +65,7 @@ def call_moonshot_api(api_key, prompt, model="moonshot-v1-8k", temperature=0.7, 
         st.warning(f"API调用失败，使用模拟数据：{str(e)}")
         return None
 
+
 def verify_moonshot_key(api_key):
     """验证月之暗面API密钥有效性"""
     if not api_key:
@@ -74,6 +77,7 @@ def verify_moonshot_key(api_key):
         return response.status_code == 200
     except:
         return False
+
 
 # -------------------------- 模拟学术数据（兜底用） --------------------------
 CORE_LITERATURE = {
@@ -102,9 +106,11 @@ CITATION_FORMATS = {
     "MLA 9th": "{authors}. \"{title}\". {journal}, vol. XX, no. XX, {year}, pp. XX-XX."
 }
 
+
 # -------------------------- 核心功能函数 --------------------------
 def get_literature(field_key):
     return CORE_LITERATURE.get(field_key, CORE_LITERATURE["默认"])
+
 
 def generate_topics(api_key, field, core_problem):
     """生成选题（月之暗面API优先，无则兜底）"""
@@ -119,7 +125,7 @@ def generate_topics(api_key, field, core_problem):
     if api_result:
         topics = [t.strip() for t in api_result.split("\n") if t.strip()]
         return topics[:3] if topics else []
-    
+
     # 兜底逻辑
     methods = ["知识锚定", "对比学习", "元学习", "提示增强", "特征对齐"]
     innovations = ["因果推理", "多模态融合", "轻量化模型", "人机协同"]
@@ -139,6 +145,7 @@ def generate_topics(api_key, field, core_problem):
         ) for template in templates
     ]
 
+
 def generate_literature_review(api_key, field, core_problem, literature_list):
     """生成综述（月之暗面API优先，无则兜底）"""
     literature_str = "\n".join([f"{auth}: {title} ({journal})" for auth, title, journal in literature_list])
@@ -153,7 +160,7 @@ def generate_literature_review(api_key, field, core_problem, literature_list):
     api_result = call_moonshot_api(api_key, prompt, temperature=0.6, max_tokens=1000)
     if api_result:
         return api_result
-    
+
     # 兜底逻辑
     return f"""
 ### 文献综述框架：{field} - {core_problem}
@@ -175,6 +182,7 @@ def generate_literature_review(api_key, field, core_problem, literature_list):
 针对上述不足，本研究拟从{random.choice(["多模态融合", "轻量化模型"])}视角出发，提出适用于{field}的{core_problem}解决方法。
     """
 
+
 def generate_abstract(api_key, field, core_problem, topic):
     """生成摘要（月之暗面API优先，无则兜底）"""
     prompt = f"""
@@ -188,7 +196,7 @@ def generate_abstract(api_key, field, core_problem, topic):
     api_result = call_moonshot_api(api_key, prompt, temperature=0.6, max_tokens=600)
     if api_result:
         return api_result
-    
+
     # 兜底逻辑
     return f"""
 ### 论文摘要
@@ -197,6 +205,7 @@ def generate_abstract(api_key, field, core_problem, topic):
 **实验结果**：在{random.choice(["公开基准数据集", "自建数据集"])}上的实验表明，所提方法相较于{random.choice(["Li et al., 2024", "Zhang et al., 2023"])}的基线模型，{random.choice(["准确率提升12.5%", "幻觉率降低18.3%", "F1值提高9.7%"])}，验证了方法的有效性。
 **研究结论**：该方法为解决{field}中的{core_problem}问题提供了新的思路，可进一步拓展至{random.choice(["多模态任务", "工业级应用场景"])}。
     """
+
 
 def format_citation(literature, format_type):
     formatted_citations = []
@@ -210,6 +219,7 @@ def format_citation(literature, format_type):
         )
         formatted_citations.append(citation)
     return formatted_citations
+
 
 # -------------------------- 页面布局 --------------------------
 st.sidebar.header("📋 研究参数配置")
