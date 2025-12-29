@@ -1,12 +1,11 @@
 streamlit>=1.30.0
-# 适配Python 3.13的LangChain最新兼容版本
+# 对齐langchain-community的langchain-core版本
 langchain==0.2.15
-langchain-core==0.2.38
+langchain-core==0.2.36
 langchain-openai==0.1.23
 langchain-community==0.2.14
 # 基础依赖
 openai>=1.40.0
 requests>=2.32.0
-# 补充Python 3.13兼容依赖
 typing-extensions>=4.12.0
 pydantic>=2.8.2
