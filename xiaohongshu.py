@@ -1,10 +1,10 @@
 import streamlit as st
 import random
 from datetime import datetime
-# 修正：适配新版LangChain的ChatOpenAI导入路径
+# 适配新版LangChain的导入路径
 from langchain_openai import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
-from langchain.schema.output_parser import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 
 # -------------------------- 页面基础配置（小红书风格） --------------------------
 st.set_page_config(
