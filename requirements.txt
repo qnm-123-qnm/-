@@ -1,8 +1,4 @@
 streamlit>=1.30.0
-# 核心依赖（必须指定版本，避免自动升级导致兼容问题）
-langchain==0.1.10
-langchain-core==0.1.28
-langchain-openai==0.1.6
-# 基础依赖
-openai>=1.30.0
+langchain==0.0.350  # 旧版本无模块拆分，无依赖冲突
+openai>=1.0.0
 requests>=2.31.0
