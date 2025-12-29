@@ -1,10 +1,14 @@
 import streamlit as st
 import random
 from datetime import datetime
-# 恢复旧版导入路径（核心！）
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
-from langchain.schema.output_parser import StrOutputParser
+# 最终兼容版导入路径（适配Python 3.13+LangChain 0.2.x）
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+# 补充Python 3.13兼容补丁
+import typing
+if not hasattr(typing, 'Literal'):
+    from typing_extensions import Literal
 
 # -------------------------- 页面基础配置（小红书风格） --------------------------
 st.set_page_config(
@@ -298,4 +302,5 @@ if generate_btn:
 # 底部提示
 st.divider()
 st.caption("💡 提示：生成文案可根据需求微调，标签建议保留3-5个核心词，流量效果更佳～")
+
 
