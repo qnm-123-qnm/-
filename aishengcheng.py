@@ -1,8 +1,6 @@
 import streamlit as st
 import random
 from datetime import datetime
-# 替换为月之暗面SDK
-from moonshot import Moonshot
 
 # -------------------------- 页面基础配置 --------------------------
 st.set_page_config(
@@ -34,10 +32,6 @@ st.markdown("""
         padding: 8px;
         border-radius: 4px;
     }
-    .highlight {
-        color: #2196f3;
-        font-weight: 600;
-    }
     .api-tip {
         font-size: 0.9em;
         color: #666;
@@ -47,24 +41,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# -------------------------- API 配置（月之暗面） --------------------------
-def init_moonshot_client(api_key):
-    """初始化月之暗面客户端（仅基于网页输入的密钥）"""
-    if not api_key:
-        st.warning("⚠️ 未填写API密钥，将使用模拟数据生成内容（无真实LLM能力）")
-        return None
-    try:
-        client = Moonshot(api_key=api_key.strip())
-        # 验证密钥有效性（调用模型列表，月之暗面无limit参数）
-        client.models.list()
-        st.success("✅ API密钥验证通过！")
-        return client
-    except Exception as e:
-        st.error(f"❌ API密钥无效/调用失败：{str(e)}")
-        return None
-
-
-# -------------------------- 模拟学术数据（兜底用） --------------------------
+# -------------------------- 模拟学术数据 --------------------------
 CORE_LITERATURE = {
     "计算机科学/机器学习/大模型幻觉抑制": [
         ("Li et al., 2024", "《Hallucination Suppression in LLMs via Knowledge Grounding》",
@@ -98,28 +75,8 @@ def get_literature(field_key):
     return CORE_LITERATURE.get(field_key, CORE_LITERATURE["默认"])
 
 
-def generate_topics(client, field, core_problem):
-    """生成选题（月之暗面API优先，无则兜底）"""
-    if client:
-        prompt = f"""
-        你是资深学术研究员，基于以下信息生成3个创新、可行的学术选题：
-        1. 学科领域：{field}
-        2. 核心研究问题：{core_problem}
-        3. 格式要求：选题需简洁专业，贴合当前研究热点，示例：「基于知识锚定的大模型幻觉抑制方法研究」
-        """
-        try:
-            response = client.chat.completions.create(
-                model="moonshot-v1-8k",  # 月之暗面模型名
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.7,
-                max_tokens=500
-            )
-            topics = [t.strip() for t in response.choices[0].message.content.strip().split("\n") if t.strip()]
-            return topics[:3]
-        except Exception as e:
-            st.warning(f"选题生成失败，使用兜底数据：{str(e)}")
-
-    # 兜底逻辑
+def generate_topics(field, core_problem):
+    """生成选题（仅模拟逻辑）"""
     methods = ["知识锚定", "对比学习", "元学习", "提示增强", "特征对齐"]
     innovations = ["因果推理", "多模态融合", "轻量化模型", "人机协同"]
     cross_fields = ["认知心理学", "统计学", "博弈论"]
@@ -139,29 +96,8 @@ def generate_topics(client, field, core_problem):
     ]
 
 
-def generate_literature_review(client, field, core_problem, literature_list):
-    """生成文献综述（月之暗面API优先，无则兜底）"""
-    if client:
-        literature_str = "\n".join([f"{auth}: {title} ({journal})" for auth, title, journal in literature_list])
-        prompt = f"""
-        基于以下信息生成结构化的文献综述框架（约800字）：
-        1. 学科领域：{field}
-        2. 核心研究问题：{core_problem}
-        3. 核心文献：{literature_str}
-        4. 框架要求：包含「研究背景与意义」「国内外研究现状」「现有研究不足」「本文研究切入点」4部分，语言专业、逻辑清晰。
-        """
-        try:
-            response = client.chat.completions.create(
-                model="moonshot-v1-8k",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.6,
-                max_tokens=1000
-            )
-            return response.choices[0].message.content.strip()
-        except Exception as e:
-            st.warning(f"综述生成失败，使用兜底数据：{str(e)}")
-
-    # 兜底逻辑
+def generate_literature_review(field, core_problem, literature_list):
+    """生成文献综述（仅模拟逻辑）"""
     return f"""
 ### 文献综述框架：{field} - {core_problem}
 #### 1. 研究背景与意义
@@ -183,28 +119,8 @@ def generate_literature_review(client, field, core_problem, literature_list):
     """
 
 
-def generate_abstract(client, field, core_problem, topic):
-    """生成摘要（月之暗面API优先，无则兜底）"""
-    if client:
-        prompt = f"""
-        基于以下信息生成规范的学术论文摘要（约300字）：
-        1. 学科领域：{field}
-        2. 核心研究问题：{core_problem}
-        3. 研究选题：{topic}
-        4. 要求：包含「研究背景」「研究方法」「实验结果」「研究结论」4部分，数据合理虚构，符合学术规范。
-        """
-        try:
-            response = client.chat.completions.create(
-                model="moonshot-v1-8k",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.6,
-                max_tokens=600
-            )
-            return response.choices[0].message.content.strip()
-        except Exception as e:
-            st.warning(f"摘要生成失败，使用兜底数据：{str(e)}")
-
-    # 兜底逻辑
+def generate_abstract(field, core_problem, topic):
+    """生成摘要（仅模拟逻辑）"""
     return f"""
 ### 论文摘要
 **研究背景**：{field}是当前人工智能领域的研究热点，{core_problem}问题已成为制约该领域技术落地的关键瓶颈。现有方法在处理{random.choice(["低资源", "复杂场景"])}下的{core_problem}时，存在{random.choice(["性能不足", "可解释性差"])}等问题。
@@ -229,8 +145,8 @@ def format_citation(literature, format_type):
     return formatted_citations
 
 
-# -------------------------- 页面布局（月之暗面API输入） --------------------------
-# 侧边栏：研究参数 + API密钥输入
+# -------------------------- 页面布局 --------------------------
+# 侧边栏：研究参数
 st.sidebar.header("📋 研究参数配置")
 field = st.sidebar.text_input("学科领域", placeholder="如：计算机科学/机器学习/大模型幻觉抑制")
 research_basis = st.sidebar.selectbox("已有基础", ["已完成文献调研", "正在进行实验", "需确定选题"])
@@ -241,18 +157,6 @@ output_choice = st.sidebar.multiselect(
     ["创新选题建议", "文献综述框架", "论文摘要初稿"],
     default=["创新选题建议", "文献综述框架", "论文摘要初稿"]
 )
-
-# 核心：侧边栏手动输入月之暗面API密钥
-st.sidebar.divider()
-st.sidebar.header("🔑 月之暗面 API 配置")
-api_key = st.sidebar.text_input(
-    "API Key",
-    type="password",
-    placeholder="sk-sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",  # 月之暗面密钥格式
-    help="获取地址：https://platform.moonshot.cn"
-)
-st.sidebar.markdown('<div class="api-tip">✅ 填写有效密钥可生成高质量学术内容，不填则用模拟数据</div>',
-                    unsafe_allow_html=True)
 
 # 生成按钮
 generate_btn = st.sidebar.button("🚀 生成学术灵感", type="primary")
@@ -266,14 +170,12 @@ if generate_btn:
     if not field or not core_problem:
         st.error("⚠️ 请先填写「学科领域」和「核心研究问题」！")
     else:
-        client = init_moonshot_client(api_key)
-
         with st.spinner("正在生成学术内容，请稍候..."):
             literature = get_literature(field.strip())
             col1, col2 = st.columns([2, 1])
             with col1:
                 st.subheader("🎯 创新选题建议")
-                topics = generate_topics(client, field, core_problem)
+                topics = generate_topics(field, core_problem)
                 for i, topic in enumerate(topics, 1):
                     st.markdown(f"""
                     <div class="result-card">
@@ -283,12 +185,12 @@ if generate_btn:
 
                 if "文献综述框架" in output_choice:
                     st.subheader("📖 文献综述框架")
-                    review = generate_literature_review(client, field, core_problem, literature)
+                    review = generate_literature_review(field, core_problem, literature)
                     st.markdown(f'<div class="result-card">{review}</div>', unsafe_allow_html=True)
 
                 if "论文摘要初稿" in output_choice:
                     st.subheader("📝 论文摘要初稿")
-                    abstract = generate_abstract(client, field, core_problem, topics[0])
+                    abstract = generate_abstract(field, core_problem, topics[0])
                     st.markdown(f'<div class="result-card">{abstract}</div>', unsafe_allow_html=True)
 
             with col2:
@@ -317,4 +219,4 @@ if generate_btn:
 
 # 底部提示
 st.divider()
-st.caption("💡 提示：生成内容仅为学术灵感参考，需结合实际研究验证；API密钥仅在本次会话有效，不会存储。")
+st.caption("💡 提示：生成内容仅为学术灵感参考，需结合实际研究验证。")
